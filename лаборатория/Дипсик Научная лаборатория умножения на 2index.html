@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Научная лаборатория — Реши по шагам</title>
+    <style>
+        :root {
+            --bg: #f8f9fa;
+            --card-bg: #ffffff;
+            --border: #2c3e50;
+            --text: #1a1a1a;
+            --accent: #2c3e50;
+            --success: #2e7d32;
+            --error: #b71c1c;
+            --heart: #d32f2f;
+            --heart-lost: #ccc;
+            --button: #2c3e50;
+            --button-hover: #1a252f;
+            --hint-bg: #e8eaf0;
+            --explain-bg: #f0f4f8;
+            --green-light: #e8f5e9;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            --font-main: 'Courier New', 'IBM Plex Mono', 'Consolas', monospace;
+            --font-ui: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg);
+            font-family: var(--font-ui);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            margin: 0;
+            background-image:
+                linear-gradient(rgba(44, 62, 80, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(44, 62, 80, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        .lab-container {
+            max-width: 720px;
+            width: 100%;
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            border-radius: 4px;
+            box-shadow: var(--shadow), 0 0 0 8px #ffffff, 0 0 0 10px var(--border);
+            padding: 32px 28px 24px;
+            position: relative;
+        }
+
+        /* Заголовок лаборатории */
+        .lab-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 16px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .lab-title {
+            font-family: var(--font-main);
+            font-size: 1.4rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .lab-title .icon {
+            font-size: 1.8rem;
+        }
+        .lives-container {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: var(--font-main);
+            font-weight: 700;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            color: var(--accent);
+            user-select: none;
+        }
+        .lives-label {
+            margin-right: 2px;
+        }
+        .heart {
+            font-size: 1.8rem;
+            color: var(--heart);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-block;
+            filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.15));
+            animation: heartPulse 2s infinite;
+        }
+        .heart.lost {
+            color: var(--heart-lost);
+            transform: scale(0);
+            opacity: 0;
+            animation: heartBreak 0.5s forwards;
+            filter: none;
+        }
+        .heart:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+        .heart:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+        .heart:nth-child(4) {
+            animation-delay: 0.3s;
+        }
+
+        @keyframes heartPulse {
+            0%,
+            100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.12);
+            }
+        }
+        @keyframes heartBreak {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            40% {
+                transform: scale(1.4);
+                opacity: 0.7;
+            }
+            100% {
+                transform: scale(0);
+                opacity: 0;
+            }
+        }
+
+        /* Условие задачи */
+        .task-condition {
+            background: #fafbfc;
+            border: 2px dashed var(--border);
+            border-radius: 4px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            font-family: var(--font-main);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: var(--text);
+            position: relative;
+        }
+        .task-condition::before {
+            content: '📋 УСЛОВИЕ ЭКСПЕРИМЕНТА';
+            position: absolute;
+            top: -12px;
+            left: 16px;
+            background: var(--card-bg);
+            padding: 2px 10px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--accent);
+            border: 1px solid var(--border);
+            border-radius: 2px;
+        }
+
+        /* Список шагов */
+        .steps-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* Карточка шага */
+        .step-card {
+            border: 2px solid #d0d4d8;
+            border-radius: 4px;
+            background: #fff;
+            padding: 18px 20px;
+            transition: all 0.35s ease;
+            position: relative;
+            opacity: 0.45;
+            pointer-events: none;
+            filter: grayscale(0.3);
+        }
+        .step-card.active {
+            border-color: var(--accent);
+            opacity: 1;
+            pointer-events: auto;
+            filter: grayscale(0);
+            box-shadow: 0 0 0 3px rgba(44, 62, 80, 0.06);
+        }
+        .step-card.completed {
+            border-color: var(--success);
+            background: var(--green-light);
+            opacity: 1;
+            pointer-events: none;
+            filter: grayscale(0);
+            box-shadow: none;
+        }
+        .step-card.completed .step-status {
+            color: var(--success);
+            font-weight: 700;
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+            font-family: var(--font-main);
+            font-weight: 700;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+            color: var(--accent);
+            text-transform: uppercase;
+        }
+        .step-number {
+            background: var(--accent);
+            color: #fff;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            flex-shrink: 0;
+        }
+        .step-card.completed .step-number {
+            background: var(--success);
+        }
+        .step-status {
+            margin-left: auto;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+            color: #888;
+            transition: color 0.3s;
+        }
+        .step-question {
+            font-size: 0.95rem;
+            font-weight: 500;
+            margin: 6px 0 4px;
+            color: #1a1a1a;
+        }
+        .step-formula {
+            font-family: var(--font-main);
+            font-size: 0.8rem;
+            color: #555;
+            margin-bottom: 8px;
+            font-style: italic;
+            background: #f5f5f5;
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 2px;
+            letter-spacing: 0.5px;
+        }
+        .step-input-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+        }
+        .step-input-row input {
+            width: 100px;
+            padding: 10px 12px;
+            font-size: 1rem;
+            font-family: var(--font-main);
+            border: 2px solid #b0b8c0;
+            border-radius: 4px;
+            outline: none;
+            transition: border 0.25s;
+            text-align: center;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+        .step-input-row input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(44, 62, 80, 0.08);
+        }
+        .step-input-row input:disabled {
+            background: #e9ecef;
+            color: #555;
+            cursor: not-allowed;
+            border-color: #ccc;
+        }
+        .btn {
+            padding: 10px 18px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+            cursor: pointer;
+            border: 2px solid transparent;
+            border-radius: 4px;
+            transition: all 0.2s;
+            font-family: var(--font-ui);
+            white-space: nowrap;
+        }
+        .btn-check {
+            background: var(--button);
+            color: #fff;
+            border-color: var(--button);
+        }
+        .btn-check:hover {
+            background: var(--button-hover);
+            border-color: var(--button-hover);
+        }
+        .btn-check:disabled {
+            background: #aaa;
+            border-color: #aaa;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        .btn-why {
+            background: transparent;
+            color: var(--accent);
+            border-color: var(--accent);
+            font-size: 0.78rem;
+            padding: 8px 14px;
+            letter-spacing: 0.4px;
+        }
+        .btn-why:hover {
+            background: var(--accent);
+            color: #fff;
+        }
+        .btn-reset {
+            background: var(--error);
+            color: #fff;
+            border-color: var(--error);
+        }
+        .btn-reset:hover {
+            background: #8b0000;
+            border-color: #8b0000;
+        }
+        .step-feedback {
+            margin-top: 10px;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            padding: 8px 12px;
+            border-radius: 4px;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        .step-feedback.show {
+            display: block;
+        }
+        .step-feedback.success-msg {
+            background: #e8f5e9;
+            color: #1b5e20;
+            border-left: 4px solid var(--success);
+        }
+        .step-feedback.error-msg {
+            background: #ffebee;
+            color: #621b16;
+            border-left: 4px solid var(--error);
+        }
+        .step-hint {
+            margin-top: 8px;
+            font-size: 0.82rem;
+            background: var(--hint-bg);
+            padding: 8px 12px;
+            border-radius: 4px;
+            color: #3e4a56;
+            border-left: 3px solid #7f8c9b;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        .step-hint.show {
+            display: block;
+        }
+        .step-explanation {
+            margin-top: 8px;
+            font-size: 0.82rem;
+            background: var(--explain-bg);
+            padding: 10px 14px;
+            border-radius: 4px;
+            color: #2c3e50;
+            border-left: 3px solid #5d7b9c;
+            display: none;
+            animation: fadeIn 0.35s ease;
+            line-height: 1.5;
+        }
+        .step-explanation.show {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-4px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Финальный экран */
+        .final-screen {
+            text-align: center;
+            padding: 32px 20px;
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        .final-screen.show {
+            display: block;
+        }
+        .final-screen h2 {
+            font-family: var(--font-main);
+            font-size: 1.6rem;
+            color: var(--success);
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+        .final-screen .lives-remaining {
+            font-size: 1.2rem;
+            margin: 12px 0;
+            font-weight: 600;
+        }
+        .final-screen .btn {
+            margin-top: 12px;
+        }
+
+        /* Оверлей Game Over */
+        .gameover-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(20, 20, 20, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            animation: fadeIn 0.3s ease;
+        }
+        .gameover-overlay.show {
+            display: flex;
+        }
+        .gameover-dialog {
+            background: #fff;
+            border: 3px solid var(--error);
+            border-radius: 6px;
+            padding: 32px 24px;
+            text-align: center;
+            max-width: 420px;
+            width: 90%;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        }
+        .gameover-dialog h2 {
+            font-family: var(--font-main);
+            font-size: 1.5rem;
+            color: var(--error);
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        .gameover-dialog p {
+            margin: 8px 0 16px;
+            color: #444;
+        }
+
+        @media (max-width: 500px) {
+            .lab-container {
+                padding: 20px 14px;
+                box-shadow: 0 0 0 4px #fff, 0 0 0 6px var(--border);
+            }
+            .step-input-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .step-input-row input {
+                width: 100%;
+            }
+            .btn {
+                width: 100%;
+                text-align: center;
+            }
+            .lab-title {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="lab-container" id="labContainer">
+        <!-- Шапка -->
+        <div class="lab-header">
+            <div class="lab-title">
+                <span class="icon">🧪</span> Научная лаборатория
+            </div>
+            <div class="lives-container" id="livesContainer">
+                <span class="lives-label">Жизни:</span>
+                <span class="heart" id="heart1">❤️</span>
+                <span class="heart" id="heart2">❤️</span>
+                <span class="heart" id="heart3">❤️</span>
+            </div>
+        </div>
+
+        <!-- Условие задачи -->
+        <div class="task-condition" id="taskCondition">
+            <strong>Задача:</strong> В научной лаборатории <strong>6 мышей</strong>. Каждой мыши дают <strong>по 2 кусочка сыра утром</strong> и <strong>по 2 кусочка вечером</strong>. Сколько всего кусочков сыра нужно на один день?
+        </div>
+
+        <!-- Список шагов -->
+        <div class="steps-list" id="stepsList"></div>
+
+        <!-- Финальный экран (скрыт) -->
+        <div class="final-screen" id="finalScreen">
+            <h2>🏆 Эксперимент завершён!</h2>
+            <p style="font-size:1.1rem;">Ты успешно решил(а) задачу! Все этапы пройдены.</p>
+            <div class="lives-remaining" id="finalLivesText"></div>
+            <button class="btn btn-check" onclick="restartGame()">🔄 Начать заново</button>
+        </div>
+    </div>
+
+    <!-- Оверлей Game Over -->
+    <div class="gameover-overlay" id="gameoverOverlay">
+        <div class="gameover-dialog">
+            <h2>💔 Эксперимент провален</h2>
+            <p>Закончились все жизни. Но не расстраивайся — в науке ошибки тоже важны!</p>
+            <button class="btn btn-reset" onclick="restartGame()">🔄 Попробовать снова</button>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // Данные шагов
+            const stepsData = [{
+                id: 1,
+                question: 'Сколько кусочков сыра дают <strong>всем мышам утром</strong>?',
+                formula: '6 × 2 = ?',
+                answer: 12,
+                hint: 'Утром каждая из 6 мышей получает по 2 кусочка. Значит, нужно 6 раз взять по 2. Умножь 6 на 2.',
+                correctMsg: '🌟 Великолепно! Ты правильно посчитал(а) утреннюю порцию сыра.',
+                correctExpl: '6 мышей × 2 кусочка = 12 кусочков. Умножение — это быстрый способ сложить одинаковые числа: 2 + 2 + 2 + 2 + 2 + 2 = 12.',
+                wrongMsg: '🤔 Не совсем... Давай разберёмся вместе.',
+                wrongExpl: 'Чтобы узнать, сколько кусочков дают утром всем мышам, нужно 6 умножить на 2. 6 × 2 = 12. Это то же самое, что сложить шесть двоек.'
+            }, {
+                id: 2,
+                question: 'Сколько кусочков сыра дают <strong>всем мышам вечером</strong>?',
+                formula: '6 × 2 = ?',
+                answer: 12,
+                hint: 'Вечером снова 6 мышей, и каждой опять по 2 кусочка. Действие такое же, как и утром: 6 × 2.',
+                correctMsg: '👏 Отлично! Вечерняя порция тоже найдена верно.',
+                correctExpl: 'Вечером всё повторяется: 6 мышей × 2 кусочка = 12 кусочков. Умножение на 2 работает одинаково в любой ситуации!',
+                wrongMsg: '🔍 Почти получилось! Проверь вычисления.',
+                wrongExpl: 'Вечером каждой из 6 мышей снова дают по 2 кусочка. 6 × 2 = 12. Как и утром!'
+            }, {
+                id: 3,
+                question: 'Сколько <strong>всего</strong> кусочков сыра нужно на целый день?',
+                formula: '12 + 12 = ? (или 12 × 2)',
+                answer: 24,
+                hint: 'Сложи утренние и вечерние кусочки: 12 + 12. Можно также умножить 12 на 2 — получится то же самое.',
+                correctMsg: '🎯 Замечательно! Ты нашёл общее количество сыра на день.',
+                correctExpl: '12 (утро) + 12 (вечер) = 24 кусочка. Или 12 × 2 = 24. Оба способа приводят к одному результату.',
+                wrongMsg: '📐 Нужно немного подумать. Давай проверим.',
+                wrongExpl: 'Сложи 12 кусочков (утро) и 12 кусочков (вечер). 12 + 12 = 24. Или умножь 12 на 2 — тоже будет 24.'
+            }, {
+                id: 4,
+                question: 'Запиши <strong>полный ответ</strong> задачи (только число):',
+                formula: 'Сколько всего кусочков сыра?',
+                answer: 24,
+                hint: 'Мы получили 24 кусочка сыра на день. Проверь: 6 мышей × 4 кусочка в день = 24.',
+                correctMsg: '🏅 Превосходно! Эксперимент завершён успешно!',
+                correctExpl: 'Всего нужно 24 кусочка сыра на один день для 6 лабораторных мышей. Задача решена!',
+                wrongMsg: '💡 Остался последний шаг! Вспомни итоговое число.',
+                wrongExpl: 'Ответ задачи — 24. Именно столько кусочков сыра потребуется на день для всех мышей.'
+            }];
+
+            // Состояние игры
+            let currentStepIndex = 0;
+            let lives = 3;
+            const totalLives = 3;
+            const maxSteps = stepsData.length;
+            let gameOver = false;
+            let gameFinished = false;
+
+            // Элементы DOM
+            const stepsListEl = document.getElementById('stepsList');
+            const finalScreenEl = document.getElementById('finalScreen');
+            const finalLivesTextEl = document.getElementById('finalLivesText');
+            const gameoverOverlayEl = document.getElementById('gameoverOverlay');
+            const heartElements = [
+                document.getElementById('heart1'),
+                document.getElementById('heart2'),
+                document.getElementById('heart3')
+            ];
+
+            // Ссылки на динамические элементы шагов (заполняются при рендере)
+            let stepCardElements = [];
+            let stepInputElements = [];
+            let stepCheckBtnElements = [];
+            let stepFeedbackElements = [];
+            let stepHintElements = [];
+            let stepExplainElements = [];
+            let stepWhyBtnElements = [];
+            let stepStatusElements = [];
+
+            // Последний ответ пользователя для каждого шага (чтобы знать, какое объяснение показывать)
+            let lastAnswerCorrect = new Array(maxSteps).fill(null);
+
+            // Рендер шагов
+            function renderSteps() {
+                stepsListEl.innerHTML = '';
+                stepCardElements = [];
+                stepInputElements = [];
+                stepCheckBtnElements = [];
+                stepFeedbackElements = [];
+                stepHintElements = [];
+                stepExplainElements = [];
+                stepWhyBtnElements = [];
+                stepStatusElements = [];
+
+                stepsData.forEach((step, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'step-card';
+                    if (index === 0 && !gameFinished) {
+                        card.classList.add('active');
+                    }
+                    if (index < currentStepIndex || (gameFinished && index < maxSteps)) {
+                        card.classList.add('completed');
+                        card.classList.remove('active');
+                    }
+                    if (gameFinished && index === maxSteps - 1) {
+                        card.classList.add('completed');
+                    }
+
+                    card.innerHTML = `
+                        <div class="step-header">
+                            <span class="step-number">${step.id}</span>
+                            <span>ЭТАП ЭКСПЕРИМЕНТА №${step.id}</span>
+                            <span class="step-status">${card.classList.contains('completed') ? '✔ ВЫПОЛНЕН' : (card.classList.contains('active') ? '◉ АКТИВЕН' : '○ ОЖИДАНИЕ')}</span>
+                        </div>
+                        <div class="step-question">${step.question}</div>
+                        <div class="step-formula">📐 ${step.formula}</div>
+                        <div class="step-input-row">
+                            <input type="number" placeholder="Ответ" ${card.classList.contains('completed') ? 'disabled' : ''} value="${card.classList.contains('completed') ? step.answer : ''}">
+                            <button class="btn btn-check" ${card.classList.contains('completed') ? 'disabled' : ''}>🔬 Проверить шаг</button>
+                            <button class="btn btn-why" style="display:none;">💡 Узнать почему</button>
+                        </div>
+                        <div class="step-feedback"></div>
+                        <div class="step-hint"></div>
+                        <div class="step-explanation"></div>
+                    `;
+
+                    stepsListEl.appendChild(card);
+
+                    // Сохраняем ссылки
+                    stepCardElements.push(card);
+                    const input = card.querySelector('input');
+                    const checkBtn = card.querySelector('.btn-check');
+                    const whyBtn = card.querySelector('.btn-why');
+                    const feedback = card.querySelector('.step-feedback');
+                    const hint = card.querySelector('.step-hint');
+                    const explain = card.querySelector('.step-explanation');
+                    const statusEl = card.querySelector('.step-status');
+
+                    stepInputElements.push(input);
+                    stepCheckBtnElements.push(checkBtn);
+                    stepWhyBtnElements.push(whyBtn);
+                    stepFeedbackElements.push(feedback);
+                    stepHintElements.push(hint);
+                    stepExplainElements.push(explain);
+                    stepStatusElements.push(statusEl);
+
+                    // Обработчики
+                    checkBtn.addEventListener('click', () => handleCheck(index));
+                    input.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter') {
+                            handleCheck(index);
+                        }
+                    });
+                    whyBtn.addEventListener('click', () => handleWhy(index));
+                });
+            }
+
+            // Обработка проверки шага
+            function handleCheck(index) {
+                if (gameOver || gameFinished) return;
+                if (index !== currentStepIndex) return;
+
+                const input = stepInputElements[index];
+                const userAnswer = parseInt(input.value.trim(), 10);
+                const correctAnswer = stepsData[index].answer;
+
+                if (isNaN(userAnswer)) {
+                    // Пустой ввод — считаем ошибкой
+                    processWrongAnswer(index);
+                    return;
+                }
+
+                if (userAnswer === correctAnswer) {
+                    processCorrectAnswer(index);
+                } else {
+                    processWrongAnswer(index);
+                }
+            }
+
+            function processCorrectAnswer(index) {
+                const step = stepsData[index];
+                const card = stepCardElements[index];
+                const input = stepInputElements[index];
+                const checkBtn = stepCheckBtnElements[index];
+                const whyBtn = stepWhyBtnElements[index];
+                const feedback = stepFeedbackElements[index];
+                const hint = stepHintElements[index];
+                const explain = stepExplainElements[index];
+                const statusEl = stepStatusElements[index];
+
+                // Отмечаем правильный ответ
+                lastAnswerCorrect[index] = true;
+                input.disabled = true;
+                checkBtn.disabled = true;
+                checkBtn.textContent = '✓ Верно';
+                card.classList.add('completed');
+                card.classList.remove('active');
+                statusEl.textContent = '✔ ВЫПОЛНЕН';
+                statusEl.style.color = '#2e7d32';
+
+                // Показываем сообщение об успехе
+                feedback.textContent = step.correctMsg;
+                feedback.className = 'step-feedback success-msg show';
+                hint.classList.remove('show');
+                explain.classList.remove('show');
+                whyBtn.style.display = 'inline-block';
+                whyBtn.textContent = '💡 Узнать почему';
+
+                // Если это был последний шаг — финиш
+                if (index === maxSteps - 1) {
+                    finishGame();
+                    return;
+                }
+
+                // Открываем следующий шаг
+                currentStepIndex = index + 1;
+                const nextCard = stepCardElements[currentStepIndex];
+                nextCard.classList.add('active');
+                nextCard.classList.remove('completed');
+                const nextStatus = stepStatusElements[currentStepIndex];
+                nextStatus.textContent = '◉ АКТИВЕН';
+                nextStatus.style.color = '';
+                stepInputElements[currentStepIndex].disabled = false;
+                stepInputElements[currentStepIndex].value = '';
+                stepInputElements[currentStepIndex].focus();
+                stepCheckBtnElements[currentStepIndex].disabled = false;
+                stepCheckBtnElements[currentStepIndex].textContent = '🔬 Проверить шаг';
+                stepWhyBtnElements[currentStepIndex].style.display = 'none';
+                stepFeedbackElements[currentStepIndex].className = 'step-feedback';
+                stepHintElements[currentStepIndex].classList.remove('show');
+                stepExplainElements[currentStepIndex].classList.remove('show');
+                lastAnswerCorrect[currentStepIndex] = null;
+            }
+
+            function processWrongAnswer(index) {
+                if (gameOver || gameFinished) return;
+                if (lives <= 0) return;
+
+                const step = stepsData[index];
+                const feedback = stepFeedbackElements[index];
+                const hint = stepHintElements[index];
+                const explain = stepExplainElements[index];
+                const whyBtn = stepWhyBtnElements[index];
+
+                // Уменьшаем жизни
+                lives--;
+                lastAnswerCorrect[index] = false;
+
+                // Анимация потери сердечка
+                updateHearts();
+
+                // Показываем сообщение об ошибке и подсказку
+                feedback.textContent = step.wrongMsg;
+                feedback.className = 'step-feedback error-msg show';
+                hint.textContent = '🔎 Подсказка: ' + step.hint;
+                hint.classList.add('show');
+                explain.classList.remove('show');
+                whyBtn.style.display = 'inline-block';
+                whyBtn.textContent = '💡 Узнать почему';
+
+                // Очищаем поле для повторной попытки
+                stepInputElements[index].value = '';
+                stepInputElements[index].focus();
+
+                // Проверяем, не закончились ли жизни
+                if (lives <= 0) {
+                    gameOver = true;
+                    // Небольшая задержка перед показом оверлея
+                    setTimeout(() => {
+                        gameoverOverlayEl.classList.add('show');
+                    }, 600);
+                    // Блокируем все активные шаги
+                    disableAllActiveSteps();
+                }
+            }
+
+            function handleWhy(index) {
+                const explain = stepExplainElements[index];
+                const isCorrect = lastAnswerCorrect[index];
+                const step = stepsData[index];
+
+                if (explain.classList.contains('show')) {
+                    explain.classList.remove('show');
+                    return;
+                }
+
+                if (isCorrect === true) {
+                    explain.textContent = '📖 Объяснение: ' + step.correctExpl;
+                    explain.className = 'step-explanation show';
+                    explain.style.borderLeftColor = '#2e7d32';
+                    explain.style.background = '#e8f5e9';
+                } else if (isCorrect === false) {
+                    explain.textContent = '📖 Объяснение ошибки: ' + step.wrongExpl;
+                    explain.className = 'step-explanation show';
+                    explain.style.borderLeftColor = '#b71c1c';
+                    explain.style.background = '#ffebee';
+                }
+            }
+
+            function updateHearts() {
+                for (let i = totalLives - 1; i >= 0; i--) {
+                    if (i >= lives) {
+                        // Потерянное сердечко
+                        if (!heartElements[i].classList.contains('lost')) {
+                            heartElements[i].classList.add('lost');
+                        }
+                    } else {
+                        heartElements[i].classList.remove('lost');
+                    }
+                }
+            }
+
+            function disableAllActiveSteps() {
+                stepInputElements.forEach((inp, i) => {
+                    if (!stepCardElements[i].classList.contains('completed')) {
+                        inp.disabled = true;
+                        stepCheckBtnElements[i].disabled = true;
+                    }
+                });
+            }
+
+            function finishGame() {
+                gameFinished = true;
+                // Показываем финальный экран
+                stepsListEl.style.display = 'none';
+                finalScreenEl.classList.add('show');
+                finalLivesTextEl.innerHTML = 'Осталось жизней: ' +
+                    Array(lives).fill('❤️').join(' ') +
+                    (lives === 0 ? ' (но ты справился!)' : '');
+                // Прокрутка к финальному экрану
+                finalScreenEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+
+            function restartGame() {
+                // Сброс состояния
+                currentStepIndex = 0;
+                lives = totalLives;
+                gameOver = false;
+                gameFinished = false;
+                lastAnswerCorrect = new Array(maxSteps).fill(null);
+
+                // Скрываем оверлеи
+                gameoverOverlayEl.classList.remove('show');
+                finalScreenEl.classList.remove('show');
+                stepsListEl.style.display = '';
+
+                // Восстанавливаем сердечки
+                heartElements.forEach(h => h.classList.remove('lost'));
+
+                // Перерендериваем шаги
+                renderSteps();
+
+                // Фокус на первом поле
+                if (stepInputElements.length > 0) {
+                    stepInputElements[0].disabled = false;
+                    stepInputElements[0].value = '';
+                    stepInputElements[0].focus();
+                }
+                if (stepCheckBtnElements.length > 0) {
+                    stepCheckBtnElements[0].disabled = false;
+                    stepCheckBtnElements[0].textContent = '🔬 Проверить шаг';
+                }
+
+                // Прокрутка вверх
+                document.getElementById('labContainer').scrollIntoView({ behavior: 'smooth' });
+            }
+
+            // Инициализация
+            renderSteps();
+            // Фокус на первом инпуте
+            if (stepInputElements.length > 0) {
+                stepInputElements[0].focus();
+            }
+
+            // Делаем restartGame глобальной для кнопок
+            window.restartGame = restartGame;
+        })();
+    </script>
+</body>
+</html>
